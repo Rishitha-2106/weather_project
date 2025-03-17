@@ -2,8 +2,12 @@ from django.shortcuts import redirect, render
 import requests
 import os
 from dotenv import load_dotenv
-load_dotenv()  # Load environment variables from .env file
-API_KEY = os.getenv("OPENWEATHER_API_KEY")  # Retrieve the API key securely
+
+
+dotenv_path = os.path.join(os.path.dirname(__file__), "../.env")  # Explicit path
+load_dotenv(dotenv_path)
+API_KEY = os.getenv("OPENWEATHER_API_KEY")
+print(f"Loaded API Key: {API_KEY}")  # Debugging
 
 
 # Function to get weather data
@@ -140,3 +144,12 @@ def clothing_recommendations(request):
         "temp": temp,
         "weather_description": weather_description
     })
+    
+    
+
+from dotenv import load_dotenv
+
+dotenv_path = os.path.join(os.getcwd(), ".env")  # Ensure correct path
+load_dotenv(dotenv_path)
+
+print(os.getenv("OPENWEATHER_API_KEY"))  # Should print your API key
