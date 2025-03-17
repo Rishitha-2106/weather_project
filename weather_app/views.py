@@ -1,11 +1,15 @@
 from django.shortcuts import redirect, render
 import requests
+import os
+from dotenv import load_dotenv
+load_dotenv()  # Load environment variables from .env file
+API_KEY = os.getenv("OPENWEATHER_API_KEY")  # Retrieve the API key securely
+
 
 # Function to get weather data
 def get_weather_data(city):
-    API_KEY = "32d430c999af84d4be9b5fe30feec412"
+    API_KEY = os.getenv("OPENWEATHER_API_KEY")    
     BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
-
     response = requests.get(BASE_URL, params={"q": city, "appid": API_KEY, "units": "metric"})
     if response.status_code == 200:
         return response.json()
@@ -13,7 +17,7 @@ def get_weather_data(city):
 
 # Function to get 5-day forecast
 def get_forecast_data(city):
-    API_KEY = "32d430c999af84d4be9b5fe30feec412"
+    API_KEY = os.getenv("OPENWEATHER_API_KEY")  # Retrieve the API key securely
     BASE_URL = "https://api.openweathermap.org/data/2.5/forecast"
     response = requests.get(BASE_URL, params={"q": city, "appid": API_KEY, "units": "metric"})
     if response.status_code == 200:
