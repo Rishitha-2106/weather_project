@@ -2,6 +2,38 @@ from django.shortcuts import redirect, render
 import requests
 import os
 from dotenv import load_dotenv
+from django.contrib.auth import login, logout
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.decorators import login_required
+from .models import UserProfile
+from django.conf import settings
+
+def signup(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('register')
+    else:
+        form = UserCreationForm()
+    return render(request, 'ttapp/signup.html', {'form': form})
+
+def user_login(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('register')
+    else:
+        form = AuthenticationForm()
+    return render(request, 'ttapp/login.html', {'form': form})
+
+@login_required
+def user_logout(request):
+    logout(request)
+    return redirect('login')
 
 
 dotenv_path = os.path.join(os.path.dirname(__file__), "../.env")  # Explicit path
