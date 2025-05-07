@@ -99,8 +99,12 @@
                 <li><a href="{% url 'food_recommendations' %}?city_name={{ city_name }}&weather={{ weather_description }}">Food</a></li>
                 <li><a href="{% url 'clothing_recommendations' %}?city_name={{ city_name }}&weather={{ weather_description }}">Clothing</a></li>
             {% endif %}
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'logout' %}">Logout</a></li>
+            {% endif %}
         </ul>
     </nav>
+    
 
     <div class="content">
         <div class="weather-container">
