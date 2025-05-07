@@ -7,28 +7,13 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'styles.css' %}">
     <style>
-            /* Change background color */
-            body {
-                background-color: rgb(135, 206, 235); /* Light Blue Sky */
-                margin: 0;
-                padding: 0;
-                font-family: Arial, sans-serif;
-            }
-            /* Navigation Bar Styling */
-            nav {
-                background-color: rgb(235, 16, 180);
-                padding: 10px 0;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                z-index: 1000;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-            /* Rest of your styles remain unchanged */
-        /* Navigation Bar Styling */
+        body {
+            background-color: rgb(135, 206, 235);
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
         nav {
             background-color: rgb(235, 16, 180);
             padding: 10px 0;
@@ -41,15 +26,19 @@
             justify-content: center;
             align-items: center;
         }
+
         nav ul {
             list-style: none;
             display: flex;
             gap: 20px;
             padding: 0;
+            margin: 0;
         }
+
         nav ul li {
             display: inline;
         }
+
         nav ul li a {
             text-decoration: none;
             color: white;
@@ -57,26 +46,28 @@
             padding: 10px 15px;
             transition: background 0.3s ease;
         }
+
         nav ul li a:hover {
             background-color: rgba(255, 255, 255, 0.2);
             border-radius: 5px;
         }
-        /* Push content down to prevent overlap with fixed navbar */
+
         .content {
             padding-top: 80px;
             text-align: center;
         }
-        /* Center input form */
+
         .weather-container {
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
         }
+
         .error-message {
             color: red;
             font-weight: bold;
         }
-        /* Forecast Styling */
+
         .forecast-container {
             display: flex;
             justify-content: center;
@@ -84,13 +75,15 @@
             flex-wrap: wrap;
             margin-top: 15px;
         }
+
         .forecast-item {
-            background-color:rgb(210, 36, 207);
+            background-color: rgb(210, 36, 207);
             padding: 10px;
             border-radius: 10px;
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
             width: 120px;
         }
+
         .forecast-item p {
             margin: 5px 0;
             font-size: 14px;
@@ -108,47 +101,48 @@
             {% endif %}
         </ul>
     </nav>
+
     <div class="content">
         <div class="weather-container">
             {% if not city_name %}
-    <div class="weather-container">
-        <h1 style="font-size: 100px; color: black;">Weather Forecast</h1>
-        {% if error_message %}
-            <div class="error-message">
-                <p>{{ error_message }}</p>
-            </div>
-        {% endif %}
-        <form method="POST">
-            {% csrf_token %}
-            <input type="text" name="city_name" placeholder="Enter city name" required>
-            <button style="background-color: blue; color: white; padding: 10px 20px; border: none; border-radius: 5px;">
-                Get Weather
-            </button>
-            </form>
-    </div>
-{% endif %}
-{% if city_name and temp is not None %}
-    <div class="weather-info">
-        <h2 style="font-size: 50px; color: black;">Weather for {{ city_name }}</h2>
-        <p>Temperature: {{ temp }}°C</p>
-        <p>Humidity: {{ humidity }}%</p>
-        <p>Description: {{ weather_description }} {{ weather_emoji }}</p>
-    </div>
-    {% if forecast %}
-        <h3>5-Day Forecast:</h3>
-        <div class="forecast-container">
-            {% for day in forecast %}
-            {% if forloop.counter <= 5 %}
-                <div class="forecast-item {{ day.weather.0.main|lower }}">
-                    <p><strong>{{ day.dt_txt|slice:"0:10" }}</strong></p>
-                    <p>Temp: {{ day.main.temp }}°C</p>
-                    <p>{{ day.weather.0.description }} {{ day.weather_emoji }}</p>
-                </div>
+                <h1 style="font-size: 100px; color: black;">Weather Forecast</h1>
+                {% if error_message %}
+                    <div class="error-message">
+                        <p>{{ error_message }}</p>
+                    </div>
+                {% endif %}
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="text" name="city_name" placeholder="Enter city name" required>
+                    <button style="background-color: blue; color: white; padding: 10px 20px; border: none; border-radius: 5px;">
+                        Get Weather
+                    </button>
+                </form>
             {% endif %}
-            {% endfor %}
-        </div>
-    {% endif %}
-{% endif %}
+
+            {% if city_name and temp is not None %}
+                <div class="weather-info">
+                    <h2 style="font-size: 50px; color: black;">Weather for {{ city_name }}</h2>
+                    <p>Temperature: {{ temp }}°C</p>
+                    <p>Humidity: {{ humidity }}%</p>
+                    <p>Description: {{ weather_description }} {{ weather_emoji }}</p>
+                </div>
+
+                {% if forecast %}
+                    <h3>5-Day Forecast:</h3>
+                    <div class="forecast-container">
+                        {% for day in forecast %}
+                            {% if forloop.counter <= 5 %}
+                                <div class="forecast-item {{ day.weather.0.main|lower }}">
+                                    <p><strong>{{ day.dt_txt|slice:"0:10" }}</strong></p>
+                                    <p>Temp: {{ day.main.temp }}°C</p>
+                                    <p>{{ day.weather.0.description }} {{ day.weather_emoji }}</p>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endif %}
         </div>
     </div>
 </body>

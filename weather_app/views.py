@@ -1,70 +1,79 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.db import models
+from .models import SearchHistory
 import requests
 import os
 from dotenv import load_dotenv
-from django.contrib.auth import login, logout
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth.decorators import login_required
-from .models import UserProfile
-from django.conf import settings
 
-def signup(request):
-    if request.method == 'POST':
+# Load .env
+dotenv_path = os.path.join(os.path.dirname(__file__), "../.env")
+load_dotenv(dotenv_path)
+API_KEY = os.getenv("OPENWEATHER_API_KEY")
+
+# ========== AUTH VIEWS ==========
+
+def signup_view(request):
+    if request.method == "POST":
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('register')
+            return redirect('home')
     else:
         form = UserCreationForm()
-    return render(request, 'ttapp/signup.html', {'form': form})
+    return render(request, 'weather_app/signup.html', {'form': form})
 
-def user_login(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+
+def login_view(request):
+    error = None
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
             login(request, user)
-            return redirect('register')
-    else:
-        form = AuthenticationForm()
-    return render(request, 'ttapp/login.html', {'form': form})
+            return redirect("home")  # Make sure 'home' is your weather page URL name
+        else:
+            if not User.objects.filter(username=username).exists():
+                error = "User does not exist. Please sign up first."
+            else:
+                error = "Incorrect password. Please try again."
 
-@login_required
-def user_logout(request):
+    return render(request, "weather_app/login.html", {"error": error})
+
+
+def logout_view(request):
     logout(request)
     return redirect('login')
 
+# ========== WEATHER LOGIC ==========
 
-dotenv_path = os.path.join(os.path.dirname(__file__), "../.env")  # Explicit path
-load_dotenv(dotenv_path)
-API_KEY = os.getenv("OPENWEATHER_API_KEY")
-print(f"Loaded API Key: {API_KEY}")  # Debugging
-
-
-# Function to get weather data
 def get_weather_data(city):
-    API_KEY = os.getenv("OPENWEATHER_API_KEY")    
     BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
     response = requests.get(BASE_URL, params={"q": city, "appid": API_KEY, "units": "metric"})
     if response.status_code == 200:
         return response.json()
     return None
 
-# Function to get 5-day forecast
 def get_forecast_data(city):
-    API_KEY = os.getenv("OPENWEATHER_API_KEY")  # Retrieve the API key securely
     BASE_URL = "https://api.openweathermap.org/data/2.5/forecast"
     response = requests.get(BASE_URL, params={"q": city, "appid": API_KEY, "units": "metric"})
     if response.status_code == 200:
         forecast_list = response.json()["list"]
-        # Extract only one forecast per day (choosing data at 12:00 PM)
         daily_forecast = {}
         for entry in forecast_list:
-            date = entry["dt_txt"].split(" ")[0]  # Extract only the date (YYYY-MM-DD)
-            if date not in daily_forecast:  # Store only one entry per day
+            date = entry["dt_txt"].split(" ")[0]
+            if date not in daily_forecast:
                 weather_desc = entry["weather"][0]["description"].lower()
-                # Assign emojis based on weather description
                 if "clear" in weather_desc:
                     weather_emoji = "☀️"
                 elif "cloud" in weather_desc:
@@ -83,25 +92,32 @@ def get_forecast_data(city):
                     weather_emoji = "🌁"
                 else:
                     weather_emoji = "🌍"
-                # Add emoji to forecast data
                 entry["weather_emoji"] = weather_emoji
                 daily_forecast[date] = entry
-        return list(daily_forecast.values())[:5]  # Return next 5 days
+        return list(daily_forecast.values())[:5]
     return None
 
-# Home page view (Displays Weather + Forecast)
+# ========== MAIN WEATHER VIEW ==========
+
+@login_required
 def weather_home(request):
     city_name = None
     weather_data = None
     forecast_data = None
     weather_emoji = ""
+    search_history = []
+
     if request.method == "POST":
         city_name = request.POST["city_name"]
         weather_data = get_weather_data(city_name)
         forecast_data = get_forecast_data(city_name)
+
         if not weather_data:
             return render(request, "weather_app/home.html", {"error_message": "City not found"})
-        # Assign emojis based on weather description
+
+        # Save to history
+        SearchHistory.objects.create(user=request.user, city=city_name)
+
         weather_desc = weather_data["weather"][0]["description"].lower()
         if "clear" in weather_desc:
             weather_emoji = "☀️"
@@ -121,25 +137,31 @@ def weather_home(request):
             weather_emoji = "🌁"
         else:
             weather_emoji = "🌍"
+
+    # Fetch last 5 searches
+    search_history = SearchHistory.objects.filter(user=request.user).order_by('-searched_at')[:5]
+
     return render(request, "weather_app/home.html", {
         "city_name": city_name,
         "temp": weather_data["main"]["temp"] if weather_data else None,
         "humidity": weather_data["main"]["humidity"] if weather_data else None,
         "weather_description": f"{weather_data['weather'][0]['description'].capitalize()} {weather_emoji}" if weather_data else None,
         "forecast": forecast_data,
+        "search_history": search_history
     })
 
-# Food recommendations page (Only accessible if city is provided)
+# ========== FOOD RECOMMENDATION ==========
+
+@login_required
 def food_recommendations(request):
     city_name = request.GET.get("city_name")
     if not city_name:
-        return redirect("home")  # Redirect to home if no city
+        return redirect("home")
     weather_data = get_weather_data(city_name)
     if not weather_data:
         return render(request, "weather_app/food.html", {"error_message": "Weather data not available."})
     temp = weather_data["main"]["temp"]
     weather_description = weather_data["weather"][0]["description"].lower()
-    # Food recommendation logic based on temperature
     if "rain" in weather_description:
         food_list = ["Pakoras 🥟", "Tea ☕", "Hot Corn 🌽"]
     elif temp < 20:
@@ -153,17 +175,18 @@ def food_recommendations(request):
         "weather_description": weather_description
     })
 
-# Clothing recommendations page (Only accessible if city is provided)
+# ========== CLOTHING RECOMMENDATION ==========
+
+@login_required
 def clothing_recommendations(request):
     city_name = request.GET.get("city_name")
     if not city_name:
-        return redirect("home")  # Redirect to home if no city
+        return redirect("home")
     weather_data = get_weather_data(city_name)
     if not weather_data:
         return render(request, "weather_app/clothing.html", {"error_message": "Weather data not available."})
     temp = weather_data["main"]["temp"]
     weather_description = weather_data["weather"][0]["description"].lower()
-    # Clothing recommendation logic based on temperature
     if "rain" in weather_description:
         clothing_list = ["Raincoat ☔", "Umbrella 🌂", "Waterproof Shoes 👞"]
     elif temp < 20:
@@ -176,12 +199,3 @@ def clothing_recommendations(request):
         "temp": temp,
         "weather_description": weather_description
     })
-    
-    
-
-from dotenv import load_dotenv
-
-dotenv_path = os.path.join(os.getcwd(), ".env")  # Ensure correct path
-load_dotenv(dotenv_path)
-
-print(os.getenv("OPENWEATHER_API_KEY"))  # Should print your API key
