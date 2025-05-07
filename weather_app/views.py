@@ -1,3 +1,4 @@
+from pyexpat.errors import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -17,15 +18,15 @@ API_KEY = os.getenv("OPENWEATHER_API_KEY")
 # ========== AUTH VIEWS ==========
 
 def signup_view(request):
-    if request.method == "POST":
+    if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('home')
+            form.save()
+            return redirect('login')  # Redirect to login after sign-up
     else:
         form = UserCreationForm()
     return render(request, 'weather_app/signup.html', {'form': form})
+
 
 
 
