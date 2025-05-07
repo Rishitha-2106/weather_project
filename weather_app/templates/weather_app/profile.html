@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <style>
+        body {
+            background-color: rgb(135, 206, 235); /* Light Blue Sky */
+            font-family: Arial, sans-serif;
+            padding-top: 60px;
+            text-align: center;
+        }
+        .profile-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: black;
+        }
+        .profile-info {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <h1>Welcome to Your Profile, {{ user.username }}!</h1>
+        <div class="profile-info">
+            <p><strong>Username:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+        </div>
+    </div>
+</body>
+</html>

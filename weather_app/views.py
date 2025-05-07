@@ -27,6 +27,16 @@ def signup_view(request):
         form = UserCreationForm()
     return render(request, 'weather_app/signup.html', {'form': form})
 
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def user_profile(request):
+    # You can add any other user-related information to this context
+    return render(request, 'weather_app/profile.html', {
+        'user': request.user
+    })
+
 
 
 
