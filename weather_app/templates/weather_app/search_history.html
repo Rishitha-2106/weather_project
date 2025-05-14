@@ -3,18 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <title>Search History</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <style>
+        body {
+            background: linear-gradient(to right, #89f7fe, #66a6ff); /* sky blue gradient */
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 700px;
+            margin: 100px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .history-item {
+            background: #f1f9ff;
+            margin-bottom: 15px;
+            padding: 15px 20px;
+            border-left: 6px solid #007BFF;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .history-item:hover {
+            background: #e1f0ff;
+            transform: scale(1.02);
+        }
+        .date {
+            font-weight: bold;
+            color: #007BFF;
+        }
+        .city {
+            font-size: 1.1em;
+            color: #333;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h1>Your Search History</h1>
-    {% if history %}
-        <ul>
+
+    <div class="container">
+        <h2>🌤️ Your Search History</h2>
+        {% if history %}
             {% for entry in history %}
-                <li>{{ entry.searched_at|date:"d-m-Y H:i" }} - {{ entry.city }}</li>
+                <div class="history-item">
+                    <div class="date">{{ entry.searched_at|date:"Y-m-d H:i" }}</div>
+                    <div class="city">City: {{ entry.city }}</div>
+                </div>
             {% endfor %}
-        </ul>
-    {% else %}
-        <p>No searches found.</p>
-    {% endif %}
-    <a href="{% url 'home' %}">Back to Home</a>
+        {% else %}
+            <p style="text-align: center; color: #555;">No search history found.</p>
+        {% endif %}
+        <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
+    </div>
+
 </body>
 </html>
