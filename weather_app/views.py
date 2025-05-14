@@ -10,12 +10,10 @@ import requests
 import os
 from dotenv import load_dotenv
 
-# Load .env
 dotenv_path = os.path.join(os.path.dirname(__file__), "../.env")
 load_dotenv(dotenv_path)
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
-# ========== AUTH VIEWS ==========
 
 def signup_view(request):
     if request.method == 'POST':
@@ -36,6 +34,21 @@ def user_profile(request):
     return render(request, 'weather_app/profile.html', {
         'user': request.user
     })
+
+from .models import SearchHistory
+def home(request):
+    if request.method == 'POST':
+        city_name = request.POST.get('city_name')        
+        if request.user.is_authenticated:
+            SearchHistory.objects.create(user=request.user, city_name=city_name)
+            
+from django.contrib.auth.decorators import login_required
+from .models import SearchHistory
+
+@login_required
+def search_history(request):
+    history = SearchHistory.objects.filter(user=request.user).order_by('-searched_at')
+    return render(request, 'weather_app/search_history.html', {'history': history})
 
 
 
