@@ -102,6 +102,7 @@
             {% if user.is_authenticated %}
                 <li><a href="{% url 'profile' %}">Profile</a></li>
                 <li><a href="{% url 'logout' %}">Logout</a></li>
+                <li><a href="{% url 'search_history' %}">Search History</a></li>
             {% endif %}
         </ul>
     </nav>
